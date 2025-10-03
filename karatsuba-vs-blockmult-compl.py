@@ -100,17 +100,6 @@ def probar_metodo(metodo_func, metodo_name, n, base, A, B, D = []):
     mult_escalares, sum_escalares, llam_recursivas = 0, 0, -1
     return C
 
-# Registrar los datos para cada combinación de n con BASE
-for n in Ns:
-    A = [random.randint(-10**3, 10**3) for _ in range(n)]
-    B = [random.randint(-10**3, 10**3) for _ in range(n)]
-    for base in bases:
-        # Probar MULTBLOQUES
-        C = probar_metodo(mult_bloques, "Bloques", n, base, A, B)
-
-        # Probar KARATSUBA
-        D = probar_metodo(karatsuba, "Karatsuba", n, base, A, B, C)
-
 def filtrar_busquedas(metodo, base):
   return [result for result in results if result.get("Método") == metodo and result.get("BASE") == base]
 
@@ -123,87 +112,41 @@ def mostrar_graficas(base):
     df_bloques_results = pd.DataFrame(bloques_results)
 
     plt.figure(figsize=(10, 6))
-    plt.plot(
-        df_karatsuba_results['n'],
-        df_karatsuba_results['Tiempo (ms)'],
-        marker = 'o', label = 'Karatsuba'
-    )
-    plt.plot(
-        df_bloques_results['n'],
-        df_bloques_results['Tiempo (ms)'],
-        marker = 'o', 
-        color = 'red',
-        label = 'Bloques'
-    )
+    plt.plot(df_karatsuba_results['n'],df_karatsuba_results['Tiempo (ms)'],marker='o',label='Karatsuba')
+    plt.plot(df_bloques_results['n'],df_bloques_results['Tiempo (ms)'],marker='o',color='red',label='Bloques')
     plt.xlabel("Tamaño de la entrada (n)")
     plt.ylabel("Tiempo de ejecución (ms)")
-    plt.text(
-        30,
-        0.2,
-        'n*',
-        fontsize = 12,
-        font = 'serif',
-    )
-    plt.text(
-        100,
-        1.2,
-        'n*',
-        fontsize = 12,
-        font = 'serif',
-    )
-    plt.text(
-        200,
-        2,
-        'n*',
-        fontsize = 12,
-        font = 'serif',
-    )
-    plt.text(
-        450,
-        3,
-        'n*',
-        fontsize = 12,
-        font = 'serif',
-    )
-    plt.text(
-        1000,
-        4.2,
-        'n*',
-        fontsize = 12,
-        font = 'serif',
-    )
-    plt.text(
-        2000,
-        5.2,
-        'n*',
-        fontsize = 12,
-        font = 'serif',
-    )
+    plt.text(30,0.2,'n*',fontsize=12,font='serif')
+    plt.text(100,1.2,'n*',fontsize=12,font='serif')
+    plt.text(200,2,'n*',fontsize=12,font='serif')
+    plt.text(450,3,'n*',fontsize=12,font='serif')
+    plt.text(1000,4.2,'n*',fontsize=12,font='serif')
+    plt.text(2000,5.2,'n*',fontsize=12,font='serif')
     plt.title(f'Comparación de tiempo vs. n con base = {base}')
     plt.grid(True)
     plt.legend()
     plt.show()
 
     plt.figure(figsize=(10, 6))
-    plt.plot(
-        df_karatsuba_results['n'],
-        df_karatsuba_results['Mult. escalares'],
-        marker = 'o', 
-        label = 'Karatsuba'
-    )
-    plt.plot(
-        df_bloques_results['n'],
-        df_bloques_results['Mult. escalares'],
-        marker = 'o', 
-        color = 'red',
-        label = 'Bloques'
-    )
+    plt.plot(df_karatsuba_results['n'],df_karatsuba_results['Mult. escalares'],marker='o',label='Karatsuba')
+    plt.plot(df_bloques_results['n'],df_bloques_results['Mult. escalares'],marker='o',color='red',label ='Bloques')
     plt.xlabel("Tamaño de la entrada (n)")
     plt.ylabel("# multiplicaciones escalares")
     plt.title(f'Comparación de mult. escalares vs. n con base = {base}')
     plt.grid(True)
     plt.legend()
     plt.show()
+
+# Registrar los datos para cada combinación de n con BASE
+for n in Ns:
+    A = [random.randint(-10**3, 10**3) for _ in range(n)]
+    B = [random.randint(-10**3, 10**3) for _ in range(n)]
+    for base in bases:
+        # Probar MULTBLOQUES
+        C = probar_metodo(mult_bloques, "Bloques", n, base, A, B)
+
+        # Probar KARATSUBA
+        D = probar_metodo(karatsuba, "Karatsuba", n, base, A, B, C)
 
 def main():
     # Mostrar los resultados
@@ -212,10 +155,11 @@ def main():
     centrar_todo = [{'selector': '*', 'props': [('text-align', 'center')]}]
     df_final_estilizado = df_results.style.set_table_styles(centrar_todo).hide(axis="index")
     display(df_final_estilizado)
-    
+
     # Mostrar gráficas para todas las bases
     for base in bases:
       mostrar_graficas(base)
 
 if __name__ == "__main__":
     main()
+    
