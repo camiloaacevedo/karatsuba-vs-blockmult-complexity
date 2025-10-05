@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 
 mult_escalares = 0
 sum_escalares = 0
-llam_recursivas = -1
+llam_recursivas = -1   # Inicializamos los llamados en -1 ya que el primer llamado (en probar_método) no es recursivo.
+mem_auxiliar = 0
 bases = [16, 32, 64, 128]
 Ns = [64, 128, 256, 512, 1024, 2048]
 results = []
@@ -43,7 +44,7 @@ def suma(A, B):
     return suma
 
 def mult_bloques(A, B):
-    global llam_recursivas, base
+    global llam_recursivas, base, mem_auxiliar
     llam_recursivas += 1
     n = max(len(A), len(B))
     A, B = A + [0]*(n - len(A)), B + [0]*(n - len(B))
@@ -61,10 +62,11 @@ def mult_bloques(A, B):
     sumar_en(C, m, P01)
     sumar_en(C, m, P10)
     sumar_en(C, 2*m, P1)
+    mem_auxiliar += len(A0 + A1 + B0 + B1 + P0 + P01 + P10 + P1 + C)
     return C
 
 def karatsuba(A, B):
-    global sum_escalares, llam_recursivas, base
+    global sum_escalares, llam_recursivas, base, mem_auxiliar
     llam_recursivas += 1
     n = max(len(A), len(B))
     A, B = A + [0]*(n - len(A)), B + [0]*(n - len(B))
@@ -82,10 +84,11 @@ def karatsuba(A, B):
     sumar_en(C, 0, P0)
     sumar_en(C, m, M)
     sumar_en(C, 2*m, P1)
+    mem_auxiliar += len(A0 + A1 + B0 + B1 + P0 + P1 + P2 + M + C)
     return C
 
 def probar_metodo(metodo_func, metodo_name, n, base, A, B, D = []):
-    global mult_escalares, sum_escalares, llam_recursivas
+    global mult_escalares, sum_escalares, llam_recursivas, mem_auxiliar
     inicio = time.perf_counter()
     C = metodo_func(A, B)
     fin = time.perf_counter()
@@ -96,20 +99,16 @@ def probar_metodo(metodo_func, metodo_name, n, base, A, B, D = []):
       prof = 0
     results.append({"n": n, "BASE": base, "Método": metodo_name, "Tiempo (ms)": tiempo, "Mult. escalares": \
                     mult_escalares, "Sumas escalares": sum_escalares, "Llamadas": llam_recursivas, "Prof.": \
-                    prof, "Mem. auxiliar": 0, "KARATSUBA(A,B) =? MULTBLOQUES(A,B)": "..." if C != D else True})
-    mult_escalares, sum_escalares, llam_recursivas = 0, 0, -1
+                    prof, "Mem. auxiliar": mem_auxiliar, "KARATSUBA(A,B) =? MULTBLOQUES(A,B)": "..." if C != D else True})
+    mult_escalares, sum_escalares, llam_recursivas, mem_auxiliar = 0, 0, -1, 0
     return C
 
 def filtrar_busquedas(metodo, base):
   return [result for result in results if result.get("Método") == metodo and result.get("BASE") == base]
 
-def mostrar_graficas(base):
+def mostrar_graficas(base, df_karatsuba_results, df_bloques_results):
     if base not in bases:
       raise ValueError("BASE no válida")
-    karatsuba_results = filtrar_busquedas("Karatsuba", base)
-    df_karatsuba_results = pd.DataFrame(karatsuba_results)
-    bloques_results = filtrar_busquedas("Bloques", base)
-    df_bloques_results = pd.DataFrame(bloques_results)
 
     plt.figure(figsize=(10, 6))
     plt.plot(df_karatsuba_results['n'],df_karatsuba_results['Tiempo (ms)'],marker='o',label='Karatsuba')
@@ -126,6 +125,7 @@ def mostrar_graficas(base):
     plt.grid(True)
     plt.legend()
     plt.show()
+    print()
 
     plt.figure(figsize=(10, 6))
     plt.plot(df_karatsuba_results['n'],df_karatsuba_results['Mult. escalares'],marker='o',label='Karatsuba')
@@ -136,8 +136,9 @@ def mostrar_graficas(base):
     plt.grid(True)
     plt.legend()
     plt.show()
+    print()
 
-# Registrar los datos para cada combinación de n con BASE
+# Registrar los datos para cada combinación de n con todas las bases
 for n in Ns:
     A = [random.randint(-10**3, 10**3) for _ in range(n)]
     B = [random.randint(-10**3, 10**3) for _ in range(n)]
@@ -155,10 +156,16 @@ def main():
     centrar_todo = [{'selector': '*', 'props': [('text-align', 'center')]}]
     df_final_estilizado = df_results.style.set_table_styles(centrar_todo).hide(axis="index")
     display(df_final_estilizado)
+    print()
 
     # Mostrar gráficas para todas las bases
+    print('Gráficas')
     for base in bases:
-      mostrar_graficas(base)
+        karatsuba_results = filtrar_busquedas("Karatsuba", base)
+        df_karatsuba_results = pd.DataFrame(karatsuba_results)
+        bloques_results = filtrar_busquedas("Bloques", base)
+        df_bloques_results = pd.DataFrame(bloques_results)
+        mostrar_graficas(base, df_karatsuba_results, df_bloques_results)
 
 if __name__ == "__main__":
     main()
