@@ -103,8 +103,11 @@ def probar_metodo(metodo_func, metodo_name, n, base, A, B, D = []):
     mult_escalares, sum_escalares, llam_recursivas, mem_auxiliar = 0, 0, -1, 0
     return C
 
-def filtrar_busquedas(metodo, base):
-  return [result for result in results if result.get("Método") == metodo and result.get("BASE") == base]
+def filtrar_busquedas(metodo, base, n = 0):
+    if n > 0:
+        return [result for result in results if result.get("Método") == metodo and result.get("n") == n]
+    return [result for result in results if result.get("Método") == metodo and result.get("BASE") == base]
+
 
 def mostrar_graficas(base, df_karatsuba_results, df_bloques_results):
     if base not in bases:
@@ -138,7 +141,7 @@ def mostrar_graficas(base, df_karatsuba_results, df_bloques_results):
     plt.show()
     print()
 
-# Registrar los datos para cada combinación de n con todas las bases
+# Registrar los datos para each combinación de n con todas las bases
 for n in Ns:
     A = [random.randint(-10**3, 10**3) for _ in range(n)]
     B = [random.randint(-10**3, 10**3) for _ in range(n)]
@@ -149,6 +152,16 @@ for n in Ns:
         # Probar KARATSUBA
         D = probar_metodo(karatsuba, "Karatsuba", n, base, A, B, C)
 
+def get_mejores_y_peores_bases(metodo, mejores_y_peores_bases):
+    for n in Ns:
+        filtrar_por_n = filtrar_busquedas(metodo, 0, n)
+        df_filtrar_por_n = pd.DataFrame(filtrar_por_n)
+        peor_tiempo, mejor_tiempo = max(df_filtrar_por_n['Tiempo (ms)']), min(df_filtrar_por_n['Tiempo (ms)'])
+        mejor_base = [result.get("BASE") for result in filtrar_por_n if result.get("Tiempo (ms)") == mejor_tiempo][0]
+        peor_base = [result.get("BASE") for result in filtrar_por_n if result.get("Tiempo (ms)") == peor_tiempo][0]
+        mejores_y_peores_bases.append({"n": n, "Método": metodo, "Mejor base": mejor_base, "Peor base": peor_base})
+    return mejores_y_peores_bases
+
 def main():
     # Mostrar los resultados
     print('Resultados')
@@ -156,6 +169,17 @@ def main():
     centrar_todo = [{'selector': '*', 'props': [('text-align', 'center')]}]
     df_final_estilizado = df_results.style.set_table_styles(centrar_todo).hide(axis="index")
     display(df_final_estilizado)
+    print()
+
+    # Filtrar mejores y peores bases
+    mejores_y_peores_bases = []
+    mejores_y_peores_bases = get_mejores_y_peores_bases("Bloques", mejores_y_peores_bases)
+    mejores_y_peores_bases = get_mejores_y_peores_bases("Karatsuba", mejores_y_peores_bases)
+
+    # Mostrar mejores y peores bases para cada algoritmo dado n entradas
+    df_mejores_y_peores_bases = pd.DataFrame(mejores_y_peores_bases)
+    df_mejores_y_peores_bases_estilizado = df_mejores_y_peores_bases.style.set_table_styles(centrar_todo).hide(axis="index")
+    display(df_mejores_y_peores_bases_estilizado)
     print()
 
     # Mostrar gráficas para todas las bases
@@ -169,4 +193,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    
