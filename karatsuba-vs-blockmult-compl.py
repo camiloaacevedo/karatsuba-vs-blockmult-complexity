@@ -1,6 +1,4 @@
-import random
-import math
-import time
+import random, math, time
 import pandas as pd
 from IPython.display import display, HTML
 import matplotlib.pyplot as plt
@@ -23,7 +21,7 @@ def sumar_en(C, offset, P):
     return C
 
 def mult_clasica(A, B):
-    global mult_escalares, sum_escalares
+    global mult_escalares, sum_escalares, mem_auxiliar
     nA, nB = len(A), len(B)
     C = [0]*(nA + nB - 1)
     for i in range(nA):
@@ -31,6 +29,7 @@ def mult_clasica(A, B):
             C[i + j] += A[i]*B[j]
             mult_escalares += 1
             sum_escalares += 1
+    mem_auxiliar += len(C)
     return C
 
 def suma(A, B):
@@ -53,16 +52,18 @@ def mult_bloques(A, B):
     m = math.floor(n/2)
     A0, A1 = A[:m], A[m:n]
     B0, B1 = B[:m], B[m:n]
+    mem_auxiliar += len(A0 + A1 + B0 + B1)
     P0 = mult_bloques(A0, B0)
     P01 = mult_bloques(A0, B1)
     P10 = mult_bloques(A1, B0)
     P1 = mult_bloques(A1, B1)
+    mem_auxiliar += len(P0 + P01 + P10 + P1)
     C = [0 for _ in range(2*n - 1)]
     sumar_en(C, 0, P0)
     sumar_en(C, m, P01)
     sumar_en(C, m, P10)
     sumar_en(C, 2*m, P1)
-    mem_auxiliar += len(A0 + A1 + B0 + B1 + P0 + P01 + P10 + P1 + C)
+    mem_auxiliar += len(C)
     return C
 
 def karatsuba(A, B):
@@ -75,16 +76,19 @@ def karatsuba(A, B):
     m = math.floor(n/2)
     A0, A1 = A[:m], A[m:n]
     B0, B1 = B[:m], B[m:n]
+    mem_auxiliar += len(A0 + A1 + B0 + B1)
     P0 = karatsuba(A0, B0)
     P1 = karatsuba(A1, B1)
     P2 = karatsuba(suma(A0, A1), suma(B0, B1))
+    mem_auxiliar += len(P0 + P1 + P2)
     M = [P2[i] - P0[i] - P1[i] for i in range(len(P2))]
+    mem_auxiliar += len(M)
     sum_escalares += 2*len(P2)
     C = [0 for _ in range(2*n - 1)]
     sumar_en(C, 0, P0)
     sumar_en(C, m, M)
     sumar_en(C, 2*m, P1)
-    mem_auxiliar += len(A0 + A1 + B0 + B1 + P0 + P1 + P2 + M + C)
+    mem_auxiliar += len(C)
     return C
 
 def probar_metodo(metodo_func, metodo_name, n, base, A, B, D = []):
@@ -164,7 +168,6 @@ def get_mejores_y_peores_bases(metodo, mejores_y_peores_bases):
 
 def main():
     # Mostrar los resultados
-    print('Resultados')
     df_results = pd.DataFrame(results)
     centrar_todo = [{'selector': '*', 'props': [('text-align', 'center')]}]
     df_final_estilizado = df_results.style.set_table_styles(centrar_todo).hide(axis="index")
@@ -183,7 +186,6 @@ def main():
     print()
 
     # Mostrar gráficas para todas las bases
-    print('Gráficas')
     for base in bases:
         karatsuba_results = filtrar_busquedas("Karatsuba", base)
         df_karatsuba_results = pd.DataFrame(karatsuba_results)
